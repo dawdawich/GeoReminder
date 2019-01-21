@@ -2,15 +2,10 @@ package com.gooldy.georeminder
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.CardView
 import android.view.Menu
 import android.view.MenuItem
-import android.view.ViewGroup
-import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_main.toolbar
 import kotlinx.android.synthetic.main.activity_main.fab
-import kotlinx.android.synthetic.main.activity_main.cardFragment
-import kotlinx.android.synthetic.main.content_main.cardsList
+import kotlinx.android.synthetic.main.content_main.cardFragment
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
@@ -18,14 +13,21 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
 
         fab.setOnClickListener {
-            val ft = supportFragmentManager.beginTransaction()
-            ft.setCustomAnimations(R.anim.fragment_anim_slide_in_up, R.anim.fragment_anim_slide_out_up, R.anim.fragment_anim_slide_in_up, R.anim.fragment_anim_slide_out_up)
-            ft.replace(cardFragment.id, CardContent())
-            ft.addToBackStack(null)
-            ft.commit()
+            with(supportFragmentManager.beginTransaction()) {
+                val fragment = CardContent()
+                setCustomAnimations(
+                    R.anim.fragment_anim_slide_in_up,
+                    R.anim.fragment_anim_slide_out_up,
+                    R.anim.fragment_anim_slide_in_up,
+                    R.anim.fragment_anim_slide_out_up
+                )
+                replace(cardFragment.id, fragment)
+                addToBackStack(null)
+                hide(fragment)
+                commit()
+            }
         }
     }
 
