@@ -15,7 +15,7 @@ import kotlinx.android.synthetic.main.fragment_card_content.*
  * A simple [Fragment] subclass.
  * Activities that contain this fragment must implement the
  * [CardContent.OnFragmentInteractionListener] interface
- * to handle interaction events.
+ * to handle interaction events.d
  * Use the [CardContent.newInstance] factory method to
  * create an instance of this fragment.
  *

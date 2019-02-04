@@ -1,27 +1,30 @@
 package com.gooldy.georeminder
 
+import android.Manifest
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.model.LatLng
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
-import kotlinx.android.synthetic.main.activity_main.fab
-import kotlinx.android.synthetic.main.content_main.cardFragment
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
@@ -50,7 +53,6 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                 isEditContentEnable = true
             }
         }
-
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -104,7 +106,8 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
             //an error occured but we can resolve it
             Log.d(TAG, "isServicesOK: an error occurred but we can fix it")
-            val dialog = GoogleApiAvailability.getInstance().getErrorDialog(this, available,
+            val dialog = GoogleApiAvailability.getInstance().getErrorDialog(
+                this, available,
                 ERROR_DIALOG_REQUEST
             )
             dialog.show()
@@ -129,7 +132,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         val builder = AlertDialog.Builder(this)
         builder.setMessage("This application requires GPS to work properly, do you want to enable it?")
             .setCancelable(false)
-            .setPositiveButton("Yes") { _: DialogInterface, _: Int ->
+            .setPositiveButton("Yes") { _, _ ->
                 val enableGpsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
                 startActivityForResult(enableGpsIntent, PERMISSIONS_REQUEST_ENABLE_GPS)
             }
@@ -183,6 +186,11 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                 getLocationPermission()
             }
         }
+    }
+
+    private fun checkSelfLocationPermission(): Boolean {
+        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED)
     }
 
     fun startMapActivity() {
