@@ -41,6 +41,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
+        // TODO: add processing if self location do not granted
         if (checkSelfLocationPermission()) return
         mMap.isMyLocationEnabled = true
         fusedLocationClient.lastLocation.addOnCompleteListener { task ->
@@ -68,13 +69,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun getLastKnownLocation() {
-        Log.d(MapsActivity.TAG, "getLastKnownLocation: called.")
+        Log.d(TAG, "getLastKnownLocation: called.")
         if (checkSelfLocationPermission()) return
         fusedLocationClient.lastLocation.addOnCompleteListener { task ->
             task.result?.let {
                 val position = LatLng(it.latitude, it.longitude)
-                Log.d(MapsActivity.TAG, "onComplete: latitude: ${position.latitude}")
-                Log.d(MapsActivity.TAG, "onComplete: longitude: ${position.longitude}")
+                Log.d(TAG, "onComplete: latitude: ${position.latitude}")
+                Log.d(TAG, "onComplete: longitude: ${position.longitude}")
             }
         }
     }

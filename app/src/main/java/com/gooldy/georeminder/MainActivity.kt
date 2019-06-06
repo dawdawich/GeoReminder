@@ -17,9 +17,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.model.LatLng
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
@@ -122,13 +119,13 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         val manager: LocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            buildAllertMessageNoGps()
+            buildAlertMessageNoGps()
             return false
         }
         return true
     }
 
-    private fun buildAllertMessageNoGps() {
+    private fun buildAlertMessageNoGps() {
         val builder = AlertDialog.Builder(this)
         builder.setMessage("This application requires GPS to work properly, do you want to enable it?")
             .setCancelable(false)
@@ -161,7 +158,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             mLocationPermissionGranted = true
@@ -169,7 +166,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         } else {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
             )
 
@@ -186,11 +183,6 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                 getLocationPermission()
             }
         }
-    }
-
-    private fun checkSelfLocationPermission(): Boolean {
-        return (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED)
     }
 
     fun startMapActivity() {

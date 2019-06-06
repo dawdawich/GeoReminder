@@ -56,7 +56,7 @@ class CardContent : Fragment(), View.OnClickListener {
         if (context is OnFragmentInteractionListener) {
             listener = context
         } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
+            throw RuntimeException("$context must implement OnFragmentInteractionListener")
         }
     }
 
@@ -65,8 +65,8 @@ class CardContent : Fragment(), View.OnClickListener {
         listener = null
     }
 
-    override fun onClick(v: View?) {
-        when (v?.id) {
+    override fun onClick(view: View?) {
+        when (view?.id) {
             addGeo.id -> {
                 val mainActivity = activity as MainActivity
                 if (mainActivity.checkMapServices()) {
