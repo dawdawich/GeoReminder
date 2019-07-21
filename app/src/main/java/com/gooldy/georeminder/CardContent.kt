@@ -2,11 +2,14 @@ package com.gooldy.georeminder
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.gms.maps.model.Circle
 import com.gooldy.georeminder.constants.ARG_PARAM1
 import com.gooldy.georeminder.constants.ARG_PARAM2
 import kotlinx.android.synthetic.main.fragment_card_content.*
@@ -25,6 +28,7 @@ class CardContent : Fragment(), View.OnClickListener {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
+    private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +45,7 @@ class CardContent : Fragment(), View.OnClickListener {
         // Inflate the layout for this fragment
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
 //        addGeo.setOnClickListener(this)
+        recyclerView = inflate.findViewById(R.id.cardsContainer)
         inflate.findViewById<Button>(R.id.addGeo).setOnClickListener(this)
         return inflate
     }
@@ -76,6 +81,13 @@ class CardContent : Fragment(), View.OnClickListener {
         }
     }
 
+    fun setMapCoordinate(circle: Circle) {
+        Log.d(
+            TAG,
+            "Achieve circle from map, hor: ${circle.center.latitude}, ver: ${circle.center.longitude}, radius: ${circle.radius}"
+        )
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -93,6 +105,9 @@ class CardContent : Fragment(), View.OnClickListener {
     }
 
     companion object {
+
+        const val TAG = "CardContent"
+
         /**
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.

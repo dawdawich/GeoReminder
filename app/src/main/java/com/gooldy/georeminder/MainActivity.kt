@@ -1,6 +1,7 @@
 package com.gooldy.georeminder
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,17 +18,21 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.gooldy.georeminder.constants.CIRCLE_ID
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
+import com.gooldy.georeminder.data.AreaHolder
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
 
     private var isEditContentEnable = false
     private var mLocationPermissionGranted = false
+    private lateinit var cardContentFragment: CardContent
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +49,8 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                         R.anim.fragment_anim_slide_in_up,
                         R.anim.fragment_anim_slide_out_up
                     )
-                    replace(cardFragment.id, CardContent())
+                    cardContentFragment = CardContent.newInstance("", "")
+                    replace(cardFragment.id, cardContentFragment)
                 }.commit()
                 fab.hide()
                 isEditContentEnable = true
@@ -96,20 +102,22 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
         val available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
 
-        if (available == ConnectionResult.SUCCESS) {
-            //everything is fine and the user can make map requests
-            Log.d(TAG, "isServicesOK: Google Play Services is working")
-            return true
-        } else if (GoogleApiAvailability.getInstance().isUserResolvableError(available)) {
-            //an error occured but we can resolve it
-            Log.d(TAG, "isServicesOK: an error occurred but we can fix it")
-            val dialog = GoogleApiAvailability.getInstance().getErrorDialog(
-                this, available,
-                ERROR_DIALOG_REQUEST
-            )
-            dialog.show()
-        } else {
-            Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
+        when {
+            available == ConnectionResult.SUCCESS -> {
+                //everything is fine and the user can make map requests
+                Log.d(TAG, "isServicesOK: Google Play Services is working")
+                return true
+            }
+            GoogleApiAvailability.getInstance().isUserResolvableError(available) -> {
+                //an error occured but we can resolve it
+                Log.d(TAG, "isServicesOK: an error occurred but we can fix it")
+                val dialog = GoogleApiAvailability.getInstance().getErrorDialog(
+                    this, available,
+                    ERROR_DIALOG_REQUEST
+                )
+                dialog.show()
+            }
+            else -> Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show()
         }
 
         return false
@@ -182,15 +190,21 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
             } else {
                 getLocationPermission()
             }
+            MAP_CIRCLE_REQUEST -> if (resultCode == Activity.RESULT_OK) {
+                cardContentFragment.setMapCoordinate(AreaHolder.instance.data[data?.getStringExtra(CIRCLE_ID)]!!)
+            }
         }
     }
 
     fun startMapActivity() {
+        val circleId = UUID.randomUUID().toString()
         val mapIntent = Intent(this, MapsActivity::class.java)
-        startActivity(mapIntent)
+        mapIntent.putExtra(CIRCLE_ID, circleId)
+        startActivityForResult(mapIntent, MAP_CIRCLE_REQUEST)
     }
 
     companion object {
         const val TAG = "MainActivity"
+        const val MAP_CIRCLE_REQUEST = 1001
     }
 }
