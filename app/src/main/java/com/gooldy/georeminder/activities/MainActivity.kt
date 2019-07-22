@@ -1,4 +1,4 @@
-package com.gooldy.georeminder
+package com.gooldy.georeminder.activities
 
 import android.Manifest
 import android.app.Activity
@@ -18,14 +18,15 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.gooldy.georeminder.constants.CIRCLE_ID
+import com.gooldy.georeminder.R
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
+import com.gooldy.georeminder.constants.PARAM_AREA
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
-import com.gooldy.georeminder.data.AreaHolder
+import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.fragments.CardContent
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.util.*
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
@@ -191,15 +192,13 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                 getLocationPermission()
             }
             MAP_CIRCLE_REQUEST -> if (resultCode == Activity.RESULT_OK) {
-                cardContentFragment.setMapCoordinate(AreaHolder.instance.data[data?.getStringExtra(CIRCLE_ID)]!!)
+                cardContentFragment.setMapCoordinate(data?.getSerializableExtra(PARAM_AREA) as Area)
             }
         }
     }
 
     fun startMapActivity() {
-        val circleId = UUID.randomUUID().toString()
         val mapIntent = Intent(this, MapsActivity::class.java)
-        mapIntent.putExtra(CIRCLE_ID, circleId)
         startActivityForResult(mapIntent, MAP_CIRCLE_REQUEST)
     }
 

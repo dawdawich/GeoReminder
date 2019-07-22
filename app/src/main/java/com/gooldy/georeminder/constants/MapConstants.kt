@@ -6,9 +6,7 @@ const val ERROR_DIALOG_REQUEST = 501
 
 const val MAP_VIEW_BUNDLE_KEY = "MapViewBundleKey"
 
-const val CIRCLE_ID = "circleId"
-
-
+const val PARAM_AREA = "area"
 
 const val DEFAULT_ZOOM = 18.0f
 

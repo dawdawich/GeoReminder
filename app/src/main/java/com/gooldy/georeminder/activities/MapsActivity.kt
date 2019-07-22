@@ -1,4 +1,4 @@
-package com.gooldy.georeminder
+package com.gooldy.georeminder.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -48,13 +48,15 @@ import com.google.android.libraries.places.api.model.TypeFilter
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.gooldy.georeminder.constants.CIRCLE_ID
+import com.gooldy.georeminder.R
 import com.gooldy.georeminder.constants.DEFAULT_ZOOM
 import com.gooldy.georeminder.constants.MAP_VIEW_BUNDLE_KEY
-import com.gooldy.georeminder.data.AreaHolder
+import com.gooldy.georeminder.constants.PARAM_AREA
+import com.gooldy.georeminder.data.Area
 import com.mancj.materialsearchbar.MaterialSearchBar
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter
 import kotlinx.android.synthetic.main.activity_maps.*
+import java.util.*
 import java.util.stream.Collectors
 
 // Implemented like https://www.youtube.com/watch?v=ifoVBdtXsv0
@@ -230,10 +232,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             cancelFromAreaSetUp()
         }
         btnConfirm.setOnClickListener {
-            val circleId = savedInstanceState?.getString(CIRCLE_ID)
-            AreaHolder.instance.data[circleId] = activeCircle
-            val intent: Intent = Intent()
-            intent.putExtra(CIRCLE_ID, circleId)
+            val center = activeCircle!!.center
+            val radius = activeCircle!!.radius
+            val area = Area(UUID.randomUUID(), center.latitude, center.longitude, radius, "")
+            val intent = Intent()
+            intent.putExtra(PARAM_AREA, area)
             setResult(Activity.RESULT_OK, intent)
             finish()
         }

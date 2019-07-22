@@ -1,4 +1,4 @@
-package com.gooldy.georeminder
+package com.gooldy.georeminder.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -6,12 +6,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.gms.maps.model.Circle
+import com.gooldy.georeminder.R
+import com.gooldy.georeminder.activities.MainActivity
 import com.gooldy.georeminder.constants.ARG_PARAM1
 import com.gooldy.georeminder.constants.ARG_PARAM2
+import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.data.AreaItemAdapter
 import kotlinx.android.synthetic.main.fragment_card_content.*
 
 /**
@@ -28,6 +31,8 @@ class CardContent : Fragment(), View.OnClickListener {
     private var param1: String? = null
     private var param2: String? = null
     private var listener: OnFragmentInteractionListener? = null
+    private val areas: MutableList<Area> = mutableListOf()
+    private val itemAdapter: AreaItemAdapter = AreaItemAdapter(emptyList())
     private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,14 +49,14 @@ class CardContent : Fragment(), View.OnClickListener {
     ): View? {
         // Inflate the layout for this fragment
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
-//        addGeo.setOnClickListener(this)
         recyclerView = inflate.findViewById(R.id.cardsContainer)
-        inflate.findViewById<Button>(R.id.addGeo).setOnClickListener(this)
+        recyclerView.adapter = itemAdapter
+        recyclerView.layoutManager = LinearLayoutManager(inflate.context)
         return inflate
     }
 
     // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(params: Map<String, Any>) {
+    fun sendInfoToActivity(params: Map<String, Any>) {
         listener?.onFragmentInteraction(params)
     }
 
@@ -81,10 +86,15 @@ class CardContent : Fragment(), View.OnClickListener {
         }
     }
 
-    fun setMapCoordinate(circle: Circle) {
+    fun setMapCoordinate(circle: Area) {
+        areas += circle
+
+        val itemAdapter = AreaItemAdapter(areas)
+        recyclerView.adapter = itemAdapter
+
         Log.d(
             TAG,
-            "Achieve circle from map, hor: ${circle.center.latitude}, ver: ${circle.center.longitude}, radius: ${circle.radius}"
+            "Achieve circle from map, hor: ${circle.latitude}, ver: ${circle.longitude}, radius: ${circle.radius}"
         )
     }
 

@@ -4,7 +4,7 @@
                                                    xmlns:tools="http://schemas.android.com/tools"
                                                    android:layout_width="match_parent"
                                                    android:layout_height="match_parent"
-                                                   tools:context=".CardContent"
+                                                   tools:context=".fragments.CardContent"
                                                    android:id="@+id/fragmentLayout"
                                                    android:background="@color/cardview_light_background"
                                                    app:elevation="1dp"
