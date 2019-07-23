@@ -86,16 +86,13 @@ class CardContent : Fragment(), View.OnClickListener {
         }
     }
 
-    fun setMapCoordinate(circle: Area) {
-        areas += circle
+    fun setMapCoordinate(area: Area) {
+        areas += area
 
         val itemAdapter = AreaItemAdapter(areas)
         recyclerView.adapter = itemAdapter
 
-        Log.d(
-            TAG,
-            "Achieve circle from map, hor: ${circle.latitude}, ver: ${circle.longitude}, radius: ${circle.radius}"
-        )
+        Log.d(TAG, "Achieve area from map, hor: ${area.latitude}, ver: ${area.longitude}, radius: ${area.radius}")
     }
 
     /**

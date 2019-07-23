@@ -55,34 +55,24 @@ class DbAreaHandler(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME,
 
     override fun getArea(id: UUID): Area {
         readableDatabase.use {
-            it.query(
-                TABLE_AREA, arrayOf(KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_RADIUS, KEY_STREET_NAME),
-                "$KEY_ID=?", arrayOf(id.toString()), null, null, null
-            ).use { cursor ->
+            it.query(TABLE_AREA, arrayOf(KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_RADIUS, KEY_STREET_NAME),
+                "$KEY_ID=?", arrayOf(id.toString()), null, null, null).use { cursor ->
                 cursor.moveToFirst()
-                return Area(
-                    UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
-                    cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5)
-                )
+                return Area(UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
+                    cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5))
             }
         }
     }
 
     override fun getAllAreas(): Set<Area> {
         readableDatabase.use {
-            it.query(
-                TABLE_AREA, arrayOf(KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_RADIUS, KEY_STREET_NAME),
-                null, null, null, null, null
-            ).use { cursor ->
+            it.query(TABLE_AREA, arrayOf(KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_RADIUS, KEY_STREET_NAME),
+                null, null, null, null, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     val areas = mutableSetOf<Area>()
                     do {
-                        areas.add(
-                            Area(
-                                UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
-                                cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5)
-                            )
-                        )
+                        areas.add(Area(UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
+                            cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5)))
                     } while (cursor.moveToNext())
                     return areas
                 }
