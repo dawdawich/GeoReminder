@@ -30,8 +30,8 @@ class DbAreaHandler constructor(private val wDb: () -> SQLiteDatabase, private v
         rDb().query(TABLE_AREA, arrayOf(KEY_AREA_ID, KEY_AREA_LATITUDE, KEY_AREA_LONGITUDE, KEY_AREA_RADIUS, KEY_AREA_STREET_NAME),
             "$KEY_AREA_ID=?", arrayOf(id.toString()), null, null, null).use { cursor ->
             if (cursor.moveToFirst()) {
-                return Area(UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
-                    cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5))
+                return Area(UUID.fromString(cursor.getString(0)), cursor.getDouble(1),
+                    cursor.getDouble(2), cursor.getDouble(3), cursor.getString(4))
             }
         }
 
@@ -44,8 +44,8 @@ class DbAreaHandler constructor(private val wDb: () -> SQLiteDatabase, private v
             if (cursor.moveToFirst()) {
                 val areas = mutableSetOf<Area>()
                 do {
-                    areas.add(Area(UUID.fromString(cursor.getString(1)), cursor.getDouble(2),
-                        cursor.getDouble(3), cursor.getDouble(4), cursor.getString(5)))
+                    areas.add(Area(UUID.fromString(cursor.getString(0)), cursor.getDouble(1),
+                        cursor.getDouble(2), cursor.getDouble(3), cursor.getString(4)))
                 } while (cursor.moveToNext())
                 return areas
             }

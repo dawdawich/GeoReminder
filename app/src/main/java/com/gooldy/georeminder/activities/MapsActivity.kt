@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
@@ -208,7 +207,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 val circleOptions = CircleOptions()
                 circleOptions.radius(20.0)
                 circleOptions.center(mMap.cameraPosition.target)
-                circleOptions.fillColor(Color.BLUE)
+                circleOptions.fillColor(0x44FF0000FF.toInt()) // blue
                 activeCircle = mMap.addCircle(circleOptions)
 
                 tvRadius.text = "Radius: ${circleOptions.radius}m"

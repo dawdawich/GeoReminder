@@ -10,8 +10,10 @@ const val PARAM_AREA = "area"
 
 const val DEFAULT_ZOOM = 18.0f
 
-const val DATABASE_VERSION = 1
+const val DATABASE_VERSION = 6
 const val DATABASE_NAME = "GeoReminderDb"
+
+const val NOTIFICATION_CHANNEL_ID = "geo_reminder_channel"
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER

@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -35,6 +37,7 @@ class CardContent : Fragment(), View.OnClickListener {
     private val itemAdapter: AreaItemAdapter = AreaItemAdapter(emptyList())
     private lateinit var recyclerView: RecyclerView
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -49,14 +52,25 @@ class CardContent : Fragment(), View.OnClickListener {
     ): View? {
         // Inflate the layout for this fragment
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
+        val rSaveButton: Button = inflate.findViewById(R.id.saveButton)
+        val rNameET: EditText = inflate.findViewById(R.id.reminderName)
+        val rDescriptionET: EditText = inflate.findViewById(R.id.reminderDescription)
+        rSaveButton.setOnClickListener {
+            val paramMap: MutableMap<String, Any> = mutableMapOf()
+            paramMap += Pair("reminderName", rNameET.text.toString())
+            paramMap += Pair("reminderDescription", rDescriptionET.text.toString())
+            paramMap += Pair("areas", areas)
+            sendInfoToActivity(paramMap)
+            activity?.supportFragmentManager?.popBackStack()
+        }
+        inflate.findViewById<Button>(R.id.addGeo).setOnClickListener(this)
         recyclerView = inflate.findViewById(R.id.cardsContainer)
         recyclerView.adapter = itemAdapter
         recyclerView.layoutManager = LinearLayoutManager(inflate.context)
         return inflate
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    fun sendInfoToActivity(params: Map<String, Any>) {
+    private fun sendInfoToActivity(params: Map<String, Any>) {
         listener?.onFragmentInteraction(params)
     }
 
@@ -91,7 +105,6 @@ class CardContent : Fragment(), View.OnClickListener {
 
         val itemAdapter = AreaItemAdapter(areas)
         recyclerView.adapter = itemAdapter
-
         Log.d(TAG, "Achieve area from map, hor: ${area.latitude}, ver: ${area.longitude}, radius: ${area.radius}")
     }
 
@@ -107,7 +120,6 @@ class CardContent : Fragment(), View.OnClickListener {
      * for more information.
      */
     interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
         fun onFragmentInteraction(params: Map<String, Any>)
     }
 

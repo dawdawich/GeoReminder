@@ -6,27 +6,36 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.gooldy.georeminder.R
+import com.gooldy.georeminder.bgservice.PosCheckService
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PARAM_AREA
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
 import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.data.Reminder
+import com.gooldy.georeminder.data.ReminderItemAdapter
 import com.gooldy.georeminder.fragments.CardContent
+import com.gooldy.georeminder.service.MainService
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.time.LocalDateTime
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
@@ -34,11 +43,18 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     private var isEditContentEnable = false
     private var mLocationPermissionGranted = false
     private lateinit var cardContentFragment: CardContent
+    private val dbService: MainService = MainService(this)
+
+    private val reminders: MutableList<Reminder> = mutableListOf()
+    private lateinit var itemAdapter: ReminderItemAdapter
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        reminders.addAll(dbService.getAllReminders())
+
+        itemAdapter = ReminderItemAdapter(reminders)
 
         fab.setOnClickListener {
             if (!isEditContentEnable) {
@@ -57,6 +73,11 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
                 isEditContentEnable = true
             }
         }
+        reminderContainer.adapter = itemAdapter
+        reminderContainer.layoutManager = LinearLayoutManager(this)
+
+        val intent = Intent(this, PosCheckService::class.java)
+        startService(intent)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -76,8 +97,25 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onFragmentInteraction(params: Map<String, Any>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        fab.show()
+        isEditContentEnable = false
+        val areas = params["areas"] as List<Area>
+        val reminder = Reminder(UUID.randomUUID(), params["reminderName"] as String,
+            params["reminderDescription"] as String, areas.toSet(),
+            LocalDateTime.now(), LocalDateTime.now())
+        dbService.saveReminder(reminder, areas.toSet())
+        reminders.add(reminder)
+
+        val itemAdapter = ReminderItemAdapter(reminders)
+        reminderContainer.adapter = itemAdapter
+
+        itemAdapter.notifyDataSetChanged()
+
+        val intent = Intent(this, PosCheckService::class.java)
+        stopService(intent)
+        startService(intent)
     }
 
     override fun onBackPressed() {

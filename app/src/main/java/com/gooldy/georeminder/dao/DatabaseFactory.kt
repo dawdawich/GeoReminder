@@ -30,6 +30,7 @@ class DatabaseFactory private constructor(context: Context) : SQLiteOpenHelper(c
         const val KEY_REMINDER_TEXT = "text"
         const val KEY_REMINDER_CREATED = "created"
         const val KEY_REMINDER_MODIFIED = "modified"
+        const val KEY_REMINDER_NOTIFIED = "notified"
         // -----------------------
 
 
@@ -73,7 +74,8 @@ class DatabaseFactory private constructor(context: Context) : SQLiteOpenHelper(c
             |$KEY_REMINDER_NAME           TEXT NOT NULL, 
             |$KEY_REMINDER_TEXT           TEXT NOT NULL, 
             |$KEY_REMINDER_CREATED        INTEGER NOT NULL, 
-            |$KEY_REMINDER_MODIFIED       INTEGER NOT NULL
+            |$KEY_REMINDER_MODIFIED       INTEGER NOT NULL,
+            |$KEY_REMINDER_NOTIFIED       INTEGER NOT NULL
             |);
             |""".trimMargin()
         val createReminderAreaTableSql = """CREATE TABLE $TABLE_REMINDER_AREA (
@@ -84,15 +86,18 @@ class DatabaseFactory private constructor(context: Context) : SQLiteOpenHelper(c
             |);
             |""".trimMargin()
 
-        val createSql = "$createAreasTableSql$createReminderTableSql$createReminderAreaTableSql"
-        db?.execSQL(createSql)
+        db?.execSQL(createAreasTableSql)
+        db?.execSQL(createReminderTableSql)
+        db?.execSQL(createReminderAreaTableSql)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        val dropTables = """DROP TABLE IF EXISTS $TABLE_REMINDER_AREA;
-            |DROP TABLE IF EXISTS $TABLE_AREA;
-            |DROP TABLE IF EXISTS $TABLE_REMINDER""".trimMargin()
-        db?.execSQL(dropTables)
+        val dropAreaReminder = "DROP TABLE IF EXISTS $TABLE_REMINDER_AREA"
+        val dropReminder = "DROP TABLE IF EXISTS $TABLE_REMINDER"
+        val dropArea = "DROP TABLE IF EXISTS $TABLE_AREA"
+        db?.execSQL(dropAreaReminder)
+        db?.execSQL(dropReminder)
+        db?.execSQL(dropArea)
 
         onCreate(db)
     }

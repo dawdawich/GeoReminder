@@ -8,6 +8,7 @@ import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_CREATED
 import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_ID
 import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_MODIFIED
 import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_NAME
+import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_NOTIFIED
 import com.gooldy.georeminder.dao.DatabaseFactory.Companion.KEY_REMINDER_TEXT
 import com.gooldy.georeminder.dao.DatabaseFactory.Companion.TABLE_REMINDER
 import com.gooldy.georeminder.dao.interfaces.IDbReminderHandler
@@ -22,15 +23,17 @@ class DbReminderHandler constructor(private val wDb: () -> SQLiteDatabase, priva
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getAllReminders(): Set<Reminder> {
-        rDb().query(TABLE_REMINDER, arrayOf(KEY_REMINDER_ID, KEY_REMINDER_NAME, KEY_REMINDER_TEXT, KEY_REMINDER_CREATED, KEY_REMINDER_MODIFIED),
+        rDb().query(TABLE_REMINDER, arrayOf(KEY_REMINDER_ID, KEY_REMINDER_NAME, KEY_REMINDER_TEXT, KEY_REMINDER_CREATED,
+            KEY_REMINDER_MODIFIED, KEY_REMINDER_NOTIFIED),
             null, null, null, null, null).use { cursor ->
             if (cursor.moveToFirst()) {
                 val reminders = mutableSetOf<Reminder>()
                 do {
-                    reminders.add(Reminder(UUID.fromString(cursor.getString(1)), cursor.getString(2),
-                        cursor.getString(3), emptySet(),
+                    reminders.add(Reminder(UUID.fromString(cursor.getString(0)), cursor.getString(1),
+                        cursor.getString(2), emptySet(),
+                        LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(3).toLong()), ZoneId.systemDefault()),
                         LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(4).toLong()), ZoneId.systemDefault()),
-                        LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(5).toLong()), ZoneId.systemDefault())))
+                        cursor.getInt(5) > 0))
                 } while (cursor.moveToNext())
                 return reminders
             }
@@ -40,13 +43,15 @@ class DbReminderHandler constructor(private val wDb: () -> SQLiteDatabase, priva
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getReminder(id: UUID): Reminder? {
-        rDb().query(TABLE_REMINDER, arrayOf(KEY_REMINDER_ID, KEY_REMINDER_NAME, KEY_REMINDER_TEXT, KEY_REMINDER_CREATED, KEY_REMINDER_MODIFIED),
+        rDb().query(TABLE_REMINDER, arrayOf(KEY_REMINDER_ID, KEY_REMINDER_NAME, KEY_REMINDER_TEXT, KEY_REMINDER_CREATED,
+            KEY_REMINDER_MODIFIED, KEY_REMINDER_NOTIFIED),
             "$KEY_REMINDER_ID=?", arrayOf(id.toString()), null, null, null).use { cursor ->
             if (cursor.moveToFirst()) {
-                return Reminder(UUID.fromString(cursor.getString(1)), cursor.getString(2),
-                    cursor.getString(3), emptySet(),
+                return Reminder(UUID.fromString(cursor.getString(0)), cursor.getString(1),
+                    cursor.getString(2), emptySet(),
+                    LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(3).toLong()), ZoneId.systemDefault()),
                     LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(4).toLong()), ZoneId.systemDefault()),
-                    LocalDateTime.ofInstant(Instant.ofEpochSecond(cursor.getInt(5).toLong()), ZoneId.systemDefault()))
+                    cursor.getInt(5) > 0)
             }
         }
         return null
@@ -60,6 +65,7 @@ class DbReminderHandler constructor(private val wDb: () -> SQLiteDatabase, priva
             put(KEY_REMINDER_TEXT, reminder.reminderText)
             put(KEY_REMINDER_CREATED, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
             put(KEY_REMINDER_MODIFIED, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+            put(KEY_REMINDER_NOTIFIED, if (!reminder.notified) 0 else 1)
         }
 
         wDb().insert(TABLE_REMINDER, null, values)
@@ -71,6 +77,7 @@ class DbReminderHandler constructor(private val wDb: () -> SQLiteDatabase, priva
             put(KEY_REMINDER_NAME, reminder.reminderName)
             put(KEY_REMINDER_TEXT, reminder.reminderText)
             put(KEY_REMINDER_MODIFIED, LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+            put(KEY_REMINDER_NOTIFIED, if (!reminder.notified) 0 else 1)
         }
 
         wDb().update(TABLE_REMINDER, values, "$KEY_REMINDER_ID=?", arrayOf(reminder.id.toString()))
