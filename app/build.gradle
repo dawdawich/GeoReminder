@@ -5,11 +5,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
     defaultConfig {
         applicationId "com.gooldy.georeminder"
-        minSdkVersion 24
-        targetSdkVersion 28
+        minSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -23,6 +23,9 @@ android {
 }
 
 dependencies {
+    implementation group: 'androidx.preference', name: 'preference', version: '1.0.0'
+
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0-beta01'
@@ -42,6 +45,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:16.0.0'
     //Material design
     implementation 'com.github.mancj:MaterialSearchBar:0.8.1'
+    implementation 'com.alespero:expandable-cardview:0.6'
     // Notification
     implementation "com.android.support:support-compat:28.0.0"
 }

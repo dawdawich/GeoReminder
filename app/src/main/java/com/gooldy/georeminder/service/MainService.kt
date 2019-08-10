@@ -11,8 +11,12 @@ class MainService(context: Context) {
     private val dbFactory: DatabaseFactory = DatabaseFactory.getInstance(context)
 
     fun saveReminder(reminder: Reminder) {
-        dbFactory.getReminderDao {
-            it.addReminder(reminder)
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            daoR.addReminder(reminder)
+            reminder.reminderAreas.forEach {
+                daoA.addArea(it)
+                daoB.addRelation(it.id, reminder.id)
+            }
         }
     }
 
@@ -27,8 +31,13 @@ class MainService(context: Context) {
     }
 
     fun updateReminder(reminder: Reminder) {
-        dbFactory.getReminderDao {
-            it.updateReminder(reminder)
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            daoR.updateReminder(reminder)
+            reminder.reminderAreas.forEach {
+                // FIXME: not add already added areas
+                daoA.addArea(it)
+                daoB.addRelation(it.id, reminder.id)
+            }
         }
     }
 
@@ -40,8 +49,18 @@ class MainService(context: Context) {
 
     fun getAllReminders(): Set<Reminder> {
         var reminders: Set<Reminder> = emptySet()
-        dbFactory.getReminderDao {
-            reminders = it.getAllReminders()
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            reminders = daoR.getAllReminders()
+            reminders.forEach { reminder ->
+                val areaIds = daoB.getAreaIds(reminder.id)
+                val areas = mutableSetOf<Area>()
+                areaIds.forEach {
+                    daoA.getArea(UUID.fromString(it))?.let { area ->
+                        areas.add(area)
+                    }
+                }
+                reminder.reminderAreas = areas
+            }
         }
         return reminders
     }
@@ -76,6 +95,20 @@ class MainService(context: Context) {
             }
         }
         return activeAreas
+    }
+
+    fun getAllActiveReminders(): Set<Reminder> {
+        var activeReminders: Set<Reminder> = setOf()
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            activeReminders = daoR.getAllActiveReminders()
+            activeReminders.forEach { reminder ->
+                val areaIds = daoB.getAreaIds(reminder.id)
+                val areas = mutableSetOf<Area>()
+                areaIds.forEach { areaId -> daoA.getArea(UUID.fromString(areaId))?.let { area -> areas += area } }
+                reminder.reminderAreas = areas
+            }
+        }
+        return activeReminders
     }
 
     fun boundReminderWithAreas(rId: UUID, areaIds: Set<UUID>) {

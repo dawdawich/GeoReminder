@@ -1,6 +1,7 @@
 package com.gooldy.georeminder.fragments
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -8,16 +9,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Switch
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.gooldy.georeminder.R
 import com.gooldy.georeminder.activities.MainActivity
-import com.gooldy.georeminder.constants.ARG_PARAM1
-import com.gooldy.georeminder.constants.ARG_PARAM2
+import com.gooldy.georeminder.constants.ARG_PARAM_REMINDER
 import com.gooldy.georeminder.data.Area
 import com.gooldy.georeminder.data.AreaItemAdapter
+import com.gooldy.georeminder.data.Reminder
 import kotlinx.android.synthetic.main.fragment_card_content.*
+import java.time.Instant
+import java.util.*
 
 /**
  * A simple [Fragment] subclass.
@@ -29,23 +34,21 @@ import kotlinx.android.synthetic.main.fragment_card_content.*
  *
  */
 class CardContent : Fragment(), View.OnClickListener {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
+    private var reminder: Reminder? = null
     private var listener: OnFragmentInteractionListener? = null
-    private val areas: MutableList<Area> = mutableListOf()
+    private var areas: MutableSet<Area> = mutableSetOf()
     private val itemAdapter: AreaItemAdapter = AreaItemAdapter(emptyList())
     private lateinit var recyclerView: RecyclerView
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+            reminder = it.getSerializable(ARG_PARAM_REMINDER) as Reminder?
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -53,25 +56,52 @@ class CardContent : Fragment(), View.OnClickListener {
         // Inflate the layout for this fragment
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
         val rSaveButton: Button = inflate.findViewById(R.id.saveButton)
+        val rCancelButton: Button = inflate.findViewById(R.id.cancelButton)
         val rNameET: EditText = inflate.findViewById(R.id.reminderName)
         val rDescriptionET: EditText = inflate.findViewById(R.id.reminderDescription)
+        val rRepeatReminderS: Switch = inflate.findViewById(R.id.sRepeatReminder)
+        val rActiveReminderS: Switch = inflate.findViewById(R.id.sIsActive)
         rSaveButton.setOnClickListener {
-            val paramMap: MutableMap<String, Any> = mutableMapOf()
-            paramMap += Pair("reminderName", rNameET.text.toString())
-            paramMap += Pair("reminderDescription", rDescriptionET.text.toString())
-            paramMap += Pair("areas", areas)
-            sendInfoToActivity(paramMap)
+            reminder?.let {
+                sendInfoToActivity(it.apply {
+                    reminderName = rNameET.text.toString()
+                    reminderText = rDescriptionET.text.toString()
+                    reminderAreas = areas.toSet()
+                    repeatable = rRepeatReminderS.isChecked
+                    isActive = rActiveReminderS.isChecked
+                    modifyTime = Instant.now()
+                }, true)
+            } ?: run {
+                sendInfoToActivity(Reminder(UUID.randomUUID(), rNameET.text.toString(), rDescriptionET.text.toString(),
+                    areas.toSet(), Instant.now(),
+                    Instant.now(), rRepeatReminderS.isChecked, rActiveReminderS.isChecked))
+            }
+            activity?.supportFragmentManager?.popBackStack()
+        }
+        rCancelButton.setOnClickListener {
+            val mainActivity = activity as MainActivity
+            mainActivity.returnFab()
             activity?.supportFragmentManager?.popBackStack()
         }
         inflate.findViewById<Button>(R.id.addGeo).setOnClickListener(this)
         recyclerView = inflate.findViewById(R.id.cardsContainer)
         recyclerView.adapter = itemAdapter
         recyclerView.layoutManager = LinearLayoutManager(inflate.context)
+
+        reminder?.let {
+            rNameET.setText(it.reminderName)
+            rDescriptionET.setText(it.reminderText)
+            rRepeatReminderS.isChecked = it.repeatable
+            rActiveReminderS.isChecked = it.isActive
+            areas = it.reminderAreas.toMutableSet()
+            recyclerView.adapter = AreaItemAdapter(areas.toList())
+        }
+
         return inflate
     }
 
-    private fun sendInfoToActivity(params: Map<String, Any>) {
-        listener?.onFragmentInteraction(params)
+    private fun sendInfoToActivity(reminder: Reminder, isUpdate: Boolean = false) {
+        listener?.onFragmentInteraction(reminder, isUpdate)
     }
 
 
@@ -101,9 +131,9 @@ class CardContent : Fragment(), View.OnClickListener {
     }
 
     fun setMapCoordinate(area: Area) {
-        areas += area
+        areas.add(area)
 
-        val itemAdapter = AreaItemAdapter(areas)
+        val itemAdapter = AreaItemAdapter(areas.toList())
         recyclerView.adapter = itemAdapter
         Log.d(TAG, "Achieve area from map, hor: ${area.latitude}, ver: ${area.longitude}, radius: ${area.radius}")
     }
@@ -120,28 +150,18 @@ class CardContent : Fragment(), View.OnClickListener {
      * for more information.
      */
     interface OnFragmentInteractionListener {
-        fun onFragmentInteraction(params: Map<String, Any>)
+        fun onFragmentInteraction(reminder: Reminder, isUpdate: Boolean = false)
     }
 
     companion object {
 
         const val TAG = "CardContent"
 
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment CardContent.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(param1: String, param2: String) =
+        fun newInstance(reminder: Reminder?) =
             CardContent().apply {
                 arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+                    putSerializable(ARG_PARAM_REMINDER, reminder)
                 }
             }
     }

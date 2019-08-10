@@ -2,8 +2,10 @@ package com.gooldy.georeminder.activities
 
 import android.Manifest
 import android.app.Activity
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.os.Build
@@ -12,17 +14,24 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.material.snackbar.Snackbar
 import com.gooldy.georeminder.R
-import com.gooldy.georeminder.bgservice.PosCheckService
+import com.gooldy.georeminder.bgservice.LocationResultHelper
+import com.gooldy.georeminder.bgservice.LocationUpdatesBroadcastReceiver
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PARAM_AREA
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
@@ -34,19 +43,27 @@ import com.gooldy.georeminder.fragments.CardContent
 import com.gooldy.georeminder.service.MainService
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
-import java.time.LocalDateTime
-import java.util.*
 
 
-class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener {
+class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener, GoogleApiClient.ConnectionCallbacks,
+    GoogleApiClient.OnConnectionFailedListener, SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var isEditContentEnable = false
     private var mLocationPermissionGranted = false
+
+    // Fragments
     private lateinit var cardContentFragment: CardContent
+
+    // DB service
     private val dbService: MainService = MainService(this)
 
-    private val reminders: MutableList<Reminder> = mutableListOf()
+    // RecyclerView
+    private val reminders: MutableSet<Reminder> = mutableSetOf()
     private lateinit var itemAdapter: ReminderItemAdapter
+
+    // Google Play Map Services
+    private lateinit var googleApiClient: GoogleApiClient
+    private lateinit var locationRequest: LocationRequest
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,30 +71,46 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         setContentView(R.layout.activity_main)
         reminders.addAll(dbService.getAllReminders())
 
-        itemAdapter = ReminderItemAdapter(reminders)
+        itemAdapter = ReminderItemAdapter(reminders) { reminder ->
+            cardContentFragment = CardContent.newInstance(reminder)
+            instantiateFragment()
+        }
 
         fab.setOnClickListener {
-            if (!isEditContentEnable) {
-                supportFragmentManager.beginTransaction().apply {
-                    addToBackStack(null)
-                    setCustomAnimations(
-                        R.anim.fragment_anim_slide_in_up,
-                        R.anim.fragment_anim_slide_out_up,
-                        R.anim.fragment_anim_slide_in_up,
-                        R.anim.fragment_anim_slide_out_up
-                    )
-                    cardContentFragment = CardContent.newInstance("", "")
-                    replace(cardFragment.id, cardContentFragment)
-                }.commit()
-                fab.hide()
-                isEditContentEnable = true
-            }
+            cardContentFragment = CardContent.newInstance(null)
+            instantiateFragment()
         }
         reminderContainer.adapter = itemAdapter
         reminderContainer.layoutManager = LinearLayoutManager(this)
 
-        val intent = Intent(this, PosCheckService::class.java)
-        startService(intent)
+        if (!checkPermission()) {
+            requestPermission()
+        }
+        buildGoogleApiClient()
+        requestLocationUpdates()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .registerOnSharedPreferenceChangeListener(this)
+    }
+
+    private fun instantiateFragment() {
+        if (!isEditContentEnable) {
+            supportFragmentManager.beginTransaction().apply {
+                addToBackStack(null)
+                setCustomAnimations(
+                    R.anim.fragment_anim_slide_in_up,
+                    R.anim.fragment_anim_slide_out_up,
+                    R.anim.fragment_anim_slide_in_up,
+                    R.anim.fragment_anim_slide_out_up
+                )
+                replace(cardFragment.id, cardContentFragment)
+            }.commit()
+            fab.hide()
+            isEditContentEnable = true
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -98,24 +131,25 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    override fun onFragmentInteraction(params: Map<String, Any>) {
+    override fun onFragmentInteraction(reminder: Reminder, isUpdate: Boolean) {
         fab.show()
         isEditContentEnable = false
-        val areas = params["areas"] as List<Area>
-        val reminder = Reminder(UUID.randomUUID(), params["reminderName"] as String,
-            params["reminderDescription"] as String, areas.toSet(),
-            LocalDateTime.now(), LocalDateTime.now())
-        dbService.saveReminder(reminder, areas.toSet())
-        reminders.add(reminder)
 
-        val itemAdapter = ReminderItemAdapter(reminders)
-        reminderContainer.adapter = itemAdapter
 
-        itemAdapter.notifyDataSetChanged()
+        if (!isUpdate) {
+            dbService.saveReminder(reminder)
+            reminders.add(reminder)
+            val itemAdapter = ReminderItemAdapter(reminders) {
+                cardContentFragment = CardContent.newInstance(it)
+                instantiateFragment()
+            }
+            reminderContainer.adapter = itemAdapter
+        } else {
+            dbService.updateReminder(reminder)
+            reminders.add(reminder)
+            reminderContainer.adapter?.notifyDataSetChanged()
+        }
 
-        val intent = Intent(this, PosCheckService::class.java)
-        stopService(intent)
-        startService(intent)
     }
 
     override fun onBackPressed() {
@@ -237,11 +271,125 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
     fun startMapActivity() {
         val mapIntent = Intent(this, MapsActivity::class.java)
+//        startActivityFromFragment(cardContentFragment, mapIntent, MAP_CIRCLE_REQUEST)
         startActivityForResult(mapIntent, MAP_CIRCLE_REQUEST)
+    }
+
+    fun returnFab() {
+        fab.show()
+        isEditContentEnable = false
+    }
+
+    private fun checkPermission(): Boolean {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestPermission() {
+        val shouldProvideRationable: Boolean = ActivityCompat.shouldShowRequestPermissionRationale(this,
+            Manifest.permission.ACCESS_FINE_LOCATION)
+        // Provide an additional rationale to the user. This would happen if the user denied the
+        // request previously, but didn't check the "Don't ask again" checkbox.
+        if (shouldProvideRationable) {
+            Log.i(TAG, "Displaying permission rationale to provide additional context.")
+            Snackbar.make(findViewById(R.id.activity_main), R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.ok) {
+                    ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_PERMISSIONS_REQUEST_CODE)
+                }.show()
+        } else {
+            Log.i(TAG, "Requesting permission")
+            // Request permission. It's possible this can be auto answered if device policy
+            // sets the permission in a given state or the user denied the permission
+            // previously and checked "Never ask again".
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_PERMISSIONS_REQUEST_CODE)
+        }
+    }
+
+    private fun buildGoogleApiClient() {
+        if (!::googleApiClient.isInitialized) {
+            googleApiClient = GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .enableAutoManage(this, this)
+                .addApi(LocationServices.API)
+                .build()
+            createLocationRequest()
+        }
+    }
+
+    private fun createLocationRequest() {
+        locationRequest = LocationRequest().apply {
+            interval = UPDATE_INTERVAL.toLong()
+
+            // Sets the fastest rate for active location updates. This interval is exact, and your
+            // application will never receive updates faster than this value.
+            fastestInterval = FASTEST_UPDATE_INTERVAL.toLong()
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+            // Sets the maximum time when batched location updates are delivered. Updates may be
+            // delivered sooner than this interval.
+            maxWaitTime = MAX_WAIT_TIME.toLong()
+        }
+    }
+
+    override fun onConnected(bundle: Bundle?) {
+        Log.i(TAG, "GoogleApiClient connected.")
+    }
+
+    override fun onConnectionSuspended(errorCode: Int) {
+        Log.w(TAG, "Connection suspended. Error code '$errorCode'")
+        showSnackbar("Connection suspended")
+    }
+
+    override fun onConnectionFailed(connectionResult: ConnectionResult) {
+        Log.w(TAG, "Exception while connection to Google Play Service. Error message '${connectionResult.errorMessage}'")
+        showSnackbar("Exception while connection to Google Play Service")
+    }
+
+    private fun showSnackbar(text: String) {
+        val container = findViewById<View>(R.id.activity_main)
+        container?.let { Snackbar.make(it, text, Snackbar.LENGTH_LONG).show() }
+    }
+
+    private fun requestLocationUpdates() {
+        try {
+            Log.i(TAG, "Starting location updates")
+            setRequesting(this, true)
+            LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, getPendingIntent())
+        } catch (e: SecurityException) {
+            setRequesting(this, false)
+            e.printStackTrace()
+        }
+    }
+
+    private fun getPendingIntent(): PendingIntent {
+        val intent = Intent(this, LocationUpdatesBroadcastReceiver::class.java)
+        intent.action = LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES
+        return PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+    }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, s: String?) {
+        if (s == LocationResultHelper.KEY_LOCATION_UPDATE_RESULT) {
+            // need to be implemented
+        }
+
     }
 
     companion object {
         const val TAG = "MainActivity"
         const val MAP_CIRCLE_REQUEST = 1001
+        const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
+        const val UPDATE_INTERVAL = 10 * 1000
+        const val FASTEST_UPDATE_INTERVAL = UPDATE_INTERVAL / 2
+        const val MAX_WAIT_TIME = UPDATE_INTERVAL * 3
+
+        const val KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested"
+
+        fun setRequesting(context: Context, value: Boolean) {
+            PreferenceManager.getDefaultSharedPreferences(context)
+                .edit()
+                .putBoolean(KEY_LOCATION_UPDATES_REQUESTED, value)
+                .apply()
+        }
     }
 }

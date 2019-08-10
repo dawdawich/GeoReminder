@@ -31,6 +31,8 @@ class DatabaseFactory private constructor(context: Context) : SQLiteOpenHelper(c
         const val KEY_REMINDER_CREATED = "created"
         const val KEY_REMINDER_MODIFIED = "modified"
         const val KEY_REMINDER_NOTIFIED = "notified"
+        const val KEY_REMINDER_REPEATABLE = "repeatable"
+        const val KEY_REMINDER_ACTIVE = "active"
         // -----------------------
 
 
@@ -75,6 +77,8 @@ class DatabaseFactory private constructor(context: Context) : SQLiteOpenHelper(c
             |$KEY_REMINDER_TEXT           TEXT NOT NULL, 
             |$KEY_REMINDER_CREATED        INTEGER NOT NULL, 
             |$KEY_REMINDER_MODIFIED       INTEGER NOT NULL,
+            |$KEY_REMINDER_REPEATABLE     INTEGER NOT NULL,
+            |$KEY_REMINDER_ACTIVE         INTEGER NOT NULL,
             |$KEY_REMINDER_NOTIFIED       INTEGER NOT NULL
             |);
             |""".trimMargin()

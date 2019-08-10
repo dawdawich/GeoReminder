@@ -149,5 +149,26 @@
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="32dp"/>
 
+    <Switch
+            android:text="Repeat"
+            android:layout_width="347dp"
+            android:layout_height="26dp"
+            android:id="@+id/sRepeatReminder"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/addGeo"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"/>
+
+    <Switch
+            android:text="Active"
+            android:layout_width="344dp"
+            android:layout_height="24dp"
+            android:id="@+id/sIsActive"
+            android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/sRepeatReminder"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="8dp"
+            android:checked="true"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

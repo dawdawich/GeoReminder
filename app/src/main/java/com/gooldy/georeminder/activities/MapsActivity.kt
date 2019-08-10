@@ -329,7 +329,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                     LatLng(
                                         lastLocation!!.latitude,
                                         lastLocation!!.longitude
-                                    ), 18f
+                                    ), DEFAULT_ZOOM
                                 )
                             )
                             fusedLocationClient.removeLocationUpdates(this)
@@ -348,16 +348,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 PackageManager.PERMISSION_GRANTED)
     }
 
-    override fun onSaveInstanceState(outState: Bundle?, outPersistentState: PersistableBundle?) {
+    override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
         super.onSaveInstanceState(outState, outPersistentState)
 
-        var mapViewBundle = outState?.getBundle(MAP_VIEW_BUNDLE_KEY)
+        var mapViewBundle = outState.getBundle(MAP_VIEW_BUNDLE_KEY)
         if (mapViewBundle == null) {
             mapViewBundle = Bundle()
-            outState?.putBundle(MAP_VIEW_BUNDLE_KEY, mapViewBundle)
+            outState.putBundle(MAP_VIEW_BUNDLE_KEY, mapViewBundle)
         }
-
-//        mapView.onSaveInstanceState(mapViewBundle)
     }
 
     override fun onBackPressed() {
