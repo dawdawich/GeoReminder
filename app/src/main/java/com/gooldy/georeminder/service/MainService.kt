@@ -118,4 +118,14 @@ class MainService(context: Context) {
             }
         }
     }
+
+    fun removeReminder(reminder: Reminder) {
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            daoB.deleteRelations(reminder.id)
+            reminder.reminderAreas.forEach {
+                daoA.deleteArea(it.id)
+            }
+            daoR.deleteReminder(reminder.id)
+        }
+    }
 }

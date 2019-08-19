@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:padding="20dp">
+
+    <com.google.android.gms.maps.MapView
+            xmlns:map="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/map_item"
+            android:layout_width="fill_parent"
+            android:layout_height="155dp"
+            map:liteMode="true"
+            map:mapType="normal"
+            />
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="10dp">
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/edit_area"
+                android:textSize="16sp"
+                android:textColor="@color/colorBlue"
+                android:text="Edit"
+                android:layout_marginRight="30dp"
+                android:textStyle="bold"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/remove_area"
+                android:textSize="16sp"
+                android:textColor="@color/colorBlue"
+                android:layout_marginStart="10dp"
+                android:text="Remove"
+                android:textStyle="bold"/>
+    </LinearLayout>
+
+</LinearLayout>

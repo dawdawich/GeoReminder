@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.os.Handler
@@ -66,10 +68,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var placesClient: PlacesClient
     private lateinit var predictionList: List<AutocompletePrediction>
     private lateinit var materialSearchBar: MaterialSearchBar
+    private lateinit var geocoder: Geocoder
 
     private var mapView: View? = null
     private var lastLocation: Location? = null
     private var locationCallback: LocationCallback? = null
+    private var addresses: List<Address>? = null
 
     private var isAreaStarted: Boolean = false
     private var activeCircle: Circle? = null
@@ -79,6 +83,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(R.layout.activity_maps)
 
         materialSearchBar = findViewById(R.id.searchBar)
+
+        geocoder = Geocoder(this, Locale.getDefault())
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -122,6 +128,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     .setSessionToken(token)
                     .setQuery(s.toString())
                     .build()
+
                 placesClient.findAutocompletePredictions(request)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
@@ -203,14 +210,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 btnPlus.visibility = VISIBLE
                 tvRadius.visibility = VISIBLE
 
+                val position = mMap.cameraPosition.target
 
                 val circleOptions = CircleOptions()
                 circleOptions.radius(20.0)
-                circleOptions.center(mMap.cameraPosition.target)
-                circleOptions.fillColor(0x44FF0000FF.toInt()) // blue
+                circleOptions.center(position)
+                circleOptions.fillColor(0x60FF8633) // orange
+                circleOptions.strokeColor(0xF39C12)
+                circleOptions.strokeWidth(5.0F)
                 activeCircle = mMap.addCircle(circleOptions)
 
                 tvRadius.text = "Radius: ${circleOptions.radius}m"
+
+                addresses = geocoder.getFromLocation(position.latitude, position.longitude, 1)
 
                 isAreaStarted = true
             }
@@ -228,12 +240,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
         btnCancel.setOnClickListener {
+            addresses = null
             cancelFromAreaSetUp()
         }
         btnConfirm.setOnClickListener {
             val center = activeCircle!!.center
             val radius = activeCircle!!.radius
-            val area = Area(UUID.randomUUID(), center.latitude, center.longitude, radius, "")
+
+            val area = Area(UUID.randomUUID(), center.latitude, center.longitude, radius, addresses!![0].getAddressLine(0))
             val intent = Intent()
             intent.putExtra(PARAM_AREA, area)
             setResult(Activity.RESULT_OK, intent)

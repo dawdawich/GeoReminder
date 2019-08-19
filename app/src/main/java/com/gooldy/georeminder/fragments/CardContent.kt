@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
@@ -38,7 +39,7 @@ class CardContent : Fragment(), View.OnClickListener {
     private var reminder: Reminder? = null
     private var listener: OnFragmentInteractionListener? = null
     private var areas: MutableSet<Area> = mutableSetOf()
-    private val itemAdapter: AreaItemAdapter = AreaItemAdapter(emptyList())
+    private lateinit var itemAdapter: AreaItemAdapter
     private lateinit var recyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +55,7 @@ class CardContent : Fragment(), View.OnClickListener {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
+        itemAdapter = AreaItemAdapter(mutableListOf(), {}, {})
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
         val rSaveButton: Button = inflate.findViewById(R.id.saveButton)
         val rCancelButton: Button = inflate.findViewById(R.id.cancelButton)
@@ -66,21 +68,31 @@ class CardContent : Fragment(), View.OnClickListener {
                 sendInfoToActivity(it.apply {
                     reminderName = rNameET.text.toString()
                     reminderText = rDescriptionET.text.toString()
-                    reminderAreas = areas.toSet()
+                    reminderAreas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toSet()
                     repeatable = rRepeatReminderS.isChecked
                     isActive = rActiveReminderS.isChecked
                     modifyTime = Instant.now()
                 }, true)
             } ?: run {
                 sendInfoToActivity(Reminder(UUID.randomUUID(), rNameET.text.toString(), rDescriptionET.text.toString(),
-                    areas.toSet(), Instant.now(),
+                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toSet(), Instant.now(),
                     Instant.now(), rRepeatReminderS.isChecked, rActiveReminderS.isChecked))
+            }
+            val view = activity?.currentFocus
+            view?.let { v ->
+                val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                imm?.hideSoftInputFromWindow(v.windowToken, 0)
             }
             activity?.supportFragmentManager?.popBackStack()
         }
         rCancelButton.setOnClickListener {
             val mainActivity = activity as MainActivity
             mainActivity.returnFab()
+            val view = activity?.currentFocus
+            view?.let { v ->
+                val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                imm?.hideSoftInputFromWindow(v.windowToken, 0)
+            }
             activity?.supportFragmentManager?.popBackStack()
         }
         inflate.findViewById<Button>(R.id.addGeo).setOnClickListener(this)
@@ -94,7 +106,7 @@ class CardContent : Fragment(), View.OnClickListener {
             rRepeatReminderS.isChecked = it.repeatable
             rActiveReminderS.isChecked = it.isActive
             areas = it.reminderAreas.toMutableSet()
-            recyclerView.adapter = AreaItemAdapter(areas.toList())
+            recyclerView.adapter = AreaItemAdapter(areas.toMutableList(), {}, {})
         }
 
         return inflate
@@ -131,10 +143,10 @@ class CardContent : Fragment(), View.OnClickListener {
     }
 
     fun setMapCoordinate(area: Area) {
-        areas.add(area)
+        val areaItemAdapter = recyclerView.adapter as AreaItemAdapter
+        areaItemAdapter.getAreasList().add(area)
+        areaItemAdapter.notifyDataSetChanged()
 
-        val itemAdapter = AreaItemAdapter(areas.toList())
-        recyclerView.adapter = itemAdapter
         Log.d(TAG, "Achieve area from map, hor: ${area.latitude}, ver: ${area.longitude}, radius: ${area.radius}")
     }
 

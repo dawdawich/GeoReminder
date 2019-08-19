@@ -71,9 +71,13 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         setContentView(R.layout.activity_main)
         reminders.addAll(dbService.getAllReminders())
 
-        itemAdapter = ReminderItemAdapter(reminders) { reminder ->
+        itemAdapter = ReminderItemAdapter(reminders, { reminder ->
             cardContentFragment = CardContent.newInstance(reminder)
             instantiateFragment()
+        }) { reminder ->
+            dbService.removeReminder(reminder)
+            reminders.remove(reminder)
+            itemAdapter.notifyDataSetChanged()
         }
 
         fab.setOnClickListener {
@@ -139,9 +143,13 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         if (!isUpdate) {
             dbService.saveReminder(reminder)
             reminders.add(reminder)
-            val itemAdapter = ReminderItemAdapter(reminders) {
-                cardContentFragment = CardContent.newInstance(it)
+            val itemAdapter = ReminderItemAdapter(reminders, { reminderTransfer ->
+                cardContentFragment = CardContent.newInstance(reminderTransfer)
                 instantiateFragment()
+            }) { reminderTransfer ->
+                dbService.removeReminder(reminderTransfer)
+                reminders.remove(reminderTransfer)
+                itemAdapter.notifyDataSetChanged()
             }
             reminderContainer.adapter = itemAdapter
         } else {
