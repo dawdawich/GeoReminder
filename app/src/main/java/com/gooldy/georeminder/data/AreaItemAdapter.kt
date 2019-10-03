@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alespero.expandablecardview.ExpandableCardView
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -14,8 +15,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.gooldy.georeminder.R
 
 // TODO implement fun for edit and remove
-class AreaItemAdapter(private val areas: MutableList<Area>, private val editFun: (Reminder) -> Unit,
-                      private val removeFun: (Reminder) -> Unit) : RecyclerView.Adapter<AreaItemAdapter.ViewHolder>() {
+class AreaItemAdapter(private val areas: MutableList<Area>, private val editFun: (Area) -> Unit,
+                      private val removeFun: (Area) -> Unit) : RecyclerView.Adapter<AreaItemAdapter.ViewHolder>() {
 
     private lateinit var context: Context
 
@@ -44,7 +45,17 @@ class AreaItemAdapter(private val areas: MutableList<Area>, private val editFun:
         }
         holder.mapView.isClickable = false
 
-        holder.ecvItemReminder.setTitle(area.streetName)
+        val cardReminder = holder.ecvItemReminder
+        cardReminder.setTitle(area.streetName)
+        cardReminder.setOnExpandedListener { v, _ ->
+            val cardEdit: TextView = v.findViewById(R.id.edit_area)
+            cardEdit.setOnClickListener { editFun.invoke(area) }
+            val cardRemove: TextView = v.findViewById(R.id.remove_area)
+            cardRemove.setOnClickListener {
+                cardReminder.collapse()
+                removeFun.invoke(area)
+            }
+        }
     }
 
     override fun onViewRecycled(holder: ViewHolder) {

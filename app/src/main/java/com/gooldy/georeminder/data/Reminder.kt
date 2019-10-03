@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.*
 
-data class Reminder(val id: UUID, var reminderName: String, var reminderText: String, var reminderAreas: Set<Area>,
+data class Reminder(val id: UUID, var reminderName: String, var reminderText: String, var reminderAreas: MutableSet<Area>,
                     var createDate: Instant?, var modifyTime: Instant?, var repeatable: Boolean, var isActive: Boolean,
                     var notified: Boolean = false) : Serializable {
     override fun equals(other: Any?): Boolean {

@@ -55,7 +55,11 @@ class CardContent : Fragment(), View.OnClickListener {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        itemAdapter = AreaItemAdapter(mutableListOf(), {}, {})
+        itemAdapter = AreaItemAdapter(mutableListOf(), {}, { area ->
+            reminder?.reminderAreas?.remove(area)
+            itemAdapter.getAreasList().remove(area)
+            itemAdapter.notifyDataSetChanged()
+        })
         val inflate = inflater.inflate(R.layout.fragment_card_content, container, false)
         val rSaveButton: Button = inflate.findViewById(R.id.saveButton)
         val rCancelButton: Button = inflate.findViewById(R.id.cancelButton)
@@ -68,14 +72,14 @@ class CardContent : Fragment(), View.OnClickListener {
                 sendInfoToActivity(it.apply {
                     reminderName = rNameET.text.toString()
                     reminderText = rDescriptionET.text.toString()
-                    reminderAreas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toSet()
+                    reminderAreas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()
                     repeatable = rRepeatReminderS.isChecked
                     isActive = rActiveReminderS.isChecked
                     modifyTime = Instant.now()
                 }, true)
             } ?: run {
                 sendInfoToActivity(Reminder(UUID.randomUUID(), rNameET.text.toString(), rDescriptionET.text.toString(),
-                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toSet(), Instant.now(),
+                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet(), Instant.now(),
                     Instant.now(), rRepeatReminderS.isChecked, rActiveReminderS.isChecked))
             }
             val view = activity?.currentFocus
