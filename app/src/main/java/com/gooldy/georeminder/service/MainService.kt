@@ -27,11 +27,11 @@ class MainService(context: Context) {
     }
 
     fun getAllReminders(): Set<Reminder> {
-        return reminderDao.getReminders()
+        return reminderDao.getReminders().toHashSet()
     }
 
     fun getAllActiveReminders(): Set<Reminder> {
-        return reminderDao.getAllActiveReminders()
+        return reminderDao.getAllActiveReminders().toHashSet()
     }
 
     fun removeReminder(reminder: Reminder) {
@@ -39,6 +39,6 @@ class MainService(context: Context) {
     }
 
     fun getAreas(reminderId: UUID) : Set<Area> {
-        return areaDao.getAreasByReminderId(reminderId)
+        return areaDao.getAreasByReminderId(reminderId).toHashSet()
     }
 }

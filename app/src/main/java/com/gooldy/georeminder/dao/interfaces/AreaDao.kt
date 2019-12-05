@@ -18,15 +18,15 @@ interface AreaDao {
     fun updateArea(area: Area)
 
     @Delete
-    fun deleteArea(id: UUID)
+    fun deleteArea(area: Area)
 
-    @Query("SELECT * FROM reminders")
-    fun getAreas(): Set<Area>
+    @Query("SELECT * FROM areas")
+    fun getAreas(): List<Area>
 
     @Query("SELECT * FROM areas WHERE id = :id")
     fun getArea(id: UUID): Area?
 
     @Query("SELECT * FROM areas WHERE reminderId = :id")
-    fun getAreasByReminderId(id: UUID) : Set<Area>
+    fun getAreasByReminderId(id: UUID) : List<Area>
 
 }

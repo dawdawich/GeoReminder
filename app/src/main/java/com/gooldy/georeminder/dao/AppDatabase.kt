@@ -7,10 +7,12 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.gooldy.georeminder.constants.DATABASE_NAME
 import com.gooldy.georeminder.dao.converters.Converter
+import com.gooldy.georeminder.dao.entites.Area
+import com.gooldy.georeminder.dao.entites.Reminder
 import com.gooldy.georeminder.dao.interfaces.AreaDao
 import com.gooldy.georeminder.dao.interfaces.ReminderDao
 
-@Database(entities = [AreaDao::class, ReminderDao::class], version = 1)
+@Database(entities = [Area::class, Reminder::class], version = 1)
 @TypeConverters(Converter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun areaDao() : AreaDao

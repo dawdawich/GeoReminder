@@ -22,10 +22,10 @@ interface ReminderDao {
     fun deleteReminder(reminder: Reminder)
 
     @Query("SELECT * FROM reminders")
-    fun getReminders() : Set<Reminder>
+    fun getReminders() : List<Reminder>
 
     @Query("SELECT * FROM reminders WHERE active > 0")
-    fun getAllActiveReminders() : Set<Reminder>
+    fun getAllActiveReminders() : List<Reminder>
 
     @Query("SELECT * FROM reminders WHERE id = :id")
     fun getReminder(id: UUID) : Reminder

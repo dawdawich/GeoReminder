@@ -78,15 +78,16 @@ class CardContent : Fragment(), View.OnClickListener {
                     modifyTime = Instant.now()
                 }, true)
             } ?: run {
-                sendInfoToActivity(Reminder(UUID.randomUUID(),
+                val reminderObject = Reminder(UUID.randomUUID(),
                     rNameET.text.toString(),
                     rDescriptionET.text.toString(),
                     Instant.now(),
                     Instant.now(),
                     rRepeatReminderS.isChecked,
                     rActiveReminderS.isChecked,
-                    false,
-                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()))
+                    false)
+                reminderObject.areas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()
+                sendInfoToActivity(reminderObject)
             }
             val view = activity?.currentFocus
             view?.let { v ->
