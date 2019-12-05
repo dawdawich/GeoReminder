@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.alespero.expandablecardview.ExpandableCardView
 import com.gooldy.georeminder.R
+import com.gooldy.georeminder.dao.entites.Reminder
 
 class ReminderItemAdapter(private val reminders: Set<Reminder>, private val editFun: (Reminder) -> Unit,
                           private val removeFun: (Reminder) -> Unit) : RecyclerView.Adapter<ReminderItemAdapter.ViewHolder>() {

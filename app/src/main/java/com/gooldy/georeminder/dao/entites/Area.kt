@@ -1,4 +1,4 @@
-package com.gooldy.georeminder.data
+package com.gooldy.georeminder.dao.entites
 
 import androidx.annotation.NonNull
 import androidx.room.Entity
@@ -12,10 +12,10 @@ import java.util.*
     entity = Reminder::class,
     parentColumns = ["id"],
     childColumns = ["reminderId"],
-    onDelete = CASCADE)])
-data class Area(@PrimaryKey @NonNull val id: UUID,
+    onDelete = CASCADE)], tableName = "areas") data class Area(@PrimaryKey @NonNull var id: UUID,
                 @NonNull var latitude: Double,
                 @NonNull var longitude: Double, @NonNull var radius: Double,
                 var streetName: String,
-                @NonNull val reminderId: UUID
+                // TODO: change to val UUID
+                @NonNull var reminderId: UUID?
 ) : Serializable

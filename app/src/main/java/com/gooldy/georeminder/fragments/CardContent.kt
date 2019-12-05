@@ -18,9 +18,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.gooldy.georeminder.R
 import com.gooldy.georeminder.activities.MainActivity
 import com.gooldy.georeminder.constants.ARG_PARAM_REMINDER
-import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.dao.entites.Area
 import com.gooldy.georeminder.data.AreaItemAdapter
-import com.gooldy.georeminder.data.Reminder
+import com.gooldy.georeminder.dao.entites.Reminder
 import kotlinx.android.synthetic.main.fragment_card_content.*
 import java.time.Instant
 import java.util.*
@@ -56,7 +56,7 @@ class CardContent : Fragment(), View.OnClickListener {
     ): View? {
         // Inflate the layout for this fragment
         itemAdapter = AreaItemAdapter(mutableListOf(), {}, { area ->
-            reminder?.reminderAreas?.remove(area)
+            reminder?.areas?.remove(area)
             itemAdapter.getAreasList().remove(area)
             itemAdapter.notifyDataSetChanged()
         })
@@ -72,15 +72,21 @@ class CardContent : Fragment(), View.OnClickListener {
                 sendInfoToActivity(it.apply {
                     reminderName = rNameET.text.toString()
                     reminderText = rDescriptionET.text.toString()
-                    reminderAreas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()
+                    areas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()
                     repeatable = rRepeatReminderS.isChecked
-                    isActive = rActiveReminderS.isChecked
+                    active = rActiveReminderS.isChecked
                     modifyTime = Instant.now()
                 }, true)
             } ?: run {
-                sendInfoToActivity(Reminder(UUID.randomUUID(), rNameET.text.toString(), rDescriptionET.text.toString(),
-                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet(), Instant.now(),
-                    Instant.now(), rRepeatReminderS.isChecked, rActiveReminderS.isChecked))
+                sendInfoToActivity(Reminder(UUID.randomUUID(),
+                    rNameET.text.toString(),
+                    rDescriptionET.text.toString(),
+                    Instant.now(),
+                    Instant.now(),
+                    rRepeatReminderS.isChecked,
+                    rActiveReminderS.isChecked,
+                    false,
+                    (recyclerView.adapter as AreaItemAdapter).getAreasList().toMutableSet()))
             }
             val view = activity?.currentFocus
             view?.let { v ->
@@ -108,8 +114,8 @@ class CardContent : Fragment(), View.OnClickListener {
             rNameET.setText(it.reminderName)
             rDescriptionET.setText(it.reminderText)
             rRepeatReminderS.isChecked = it.repeatable
-            rActiveReminderS.isChecked = it.isActive
-            areas = it.reminderAreas.toMutableSet()
+            rActiveReminderS.isChecked = it.active
+            areas = it.areas.toMutableSet()
             recyclerView.adapter = AreaItemAdapter(areas.toMutableList(), {}, {})
         }
 

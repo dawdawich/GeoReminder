@@ -13,7 +13,7 @@ import androidx.annotation.RequiresApi
 import com.gooldy.georeminder.R
 import com.gooldy.georeminder.activities.MainActivity
 import com.gooldy.georeminder.constants.NOTIFICATION_CHANNEL_ID
-import com.gooldy.georeminder.data.Reminder
+import com.gooldy.georeminder.dao.entites.Reminder
 
 @RequiresApi(Build.VERSION_CODES.O)
 class LocationResultHelper(val context: Context) {

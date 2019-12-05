@@ -5,22 +5,28 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
-import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.dao.entites.Area
 import java.util.*
 
 @Dao
-interface IDbAreaHandler {
+interface AreaDao {
 
     @Insert
     fun addArea(area: Area)
-    @Query("SELECT * FROM reminder WHERE id = :id")
-    fun getArea(id: UUID): Area?
-    @Query("SELECT * FROM reminder")
-    fun getAllAreas(): Set<Area>
+
     @Update
     fun updateArea(area: Area)
+
     @Delete
     fun deleteArea(id: UUID)
-    fun deleteAll()
+
+    @Query("SELECT * FROM reminders")
+    fun getAreas(): Set<Area>
+
+    @Query("SELECT * FROM areas WHERE id = :id")
+    fun getArea(id: UUID): Area?
+
+    @Query("SELECT * FROM areas WHERE reminderId = :id")
+    fun getAreasByReminderId(id: UUID) : Set<Area>
 
 }

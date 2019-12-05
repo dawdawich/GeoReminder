@@ -53,7 +53,7 @@ import com.gooldy.georeminder.R
 import com.gooldy.georeminder.constants.DEFAULT_ZOOM
 import com.gooldy.georeminder.constants.MAP_VIEW_BUNDLE_KEY
 import com.gooldy.georeminder.constants.PARAM_AREA
-import com.gooldy.georeminder.data.Area
+import com.gooldy.georeminder.dao.entites.Area
 import com.mancj.materialsearchbar.MaterialSearchBar
 import com.mancj.materialsearchbar.adapter.SuggestionsAdapter
 import kotlinx.android.synthetic.main.activity_maps.*
@@ -247,7 +247,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             val center = activeCircle!!.center
             val radius = activeCircle!!.radius
 
-            val area = Area(UUID.randomUUID(), center.latitude, center.longitude, radius, addresses!![0].getAddressLine(0))
+            val area = Area(UUID.randomUUID(), center.latitude, center.longitude, radius, addresses!![0].getAddressLine(0), null)
             val intent = Intent()
             intent.putExtra(PARAM_AREA, area)
             setResult(Activity.RESULT_OK, intent)

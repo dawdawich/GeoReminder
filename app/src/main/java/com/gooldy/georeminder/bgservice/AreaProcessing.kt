@@ -3,8 +3,8 @@ package com.gooldy.georeminder.bgservice
 import android.content.Context
 import android.location.Location
 import com.gooldy.georeminder.constants.ARROR_FOR_AN_ERROR
-import com.gooldy.georeminder.data.Area
-import com.gooldy.georeminder.data.Reminder
+import com.gooldy.georeminder.dao.entites.Area
+import com.gooldy.georeminder.dao.entites.Reminder
 import com.gooldy.georeminder.service.MainService
 import java.time.Instant
 
@@ -26,18 +26,19 @@ class AreaProcessing(context: Context) {
             val locationTime = Instant.ofEpochMilli(location.time)
             activeReminders.forEach { reminder ->
                 if (reminder.modifyTime!!.isBefore(locationTime)) {
-                    if (reminder.reminderAreas
+                    val areas = dbService.getAreas(reminder.id)
+                    if (areas
                             .filter { isPosInArea(latitude, longitude, it) }
                             .any()) {
                         if (!reminder.notified) {
                             result += reminder
                             if (!reminder.repeatable) {
-                                reminder.isActive = false
+                                reminder.active = false
                             }
                             reminder.notified = true
                             reminder.modifyTime = Instant.now()
                         }
-                    } else if (reminder.repeatable && reminder.notified && reminder.reminderAreas
+                    } else if (reminder.repeatable && reminder.notified && areas
                             .none { isPosInArea(latitude, longitude, it, ARROR_FOR_AN_ERROR) }) {
                         repeatReminders += reminder
                         reminder.notified = false

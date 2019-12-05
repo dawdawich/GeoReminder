@@ -36,8 +36,8 @@ import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
 import com.gooldy.georeminder.constants.PARAM_AREA
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
-import com.gooldy.georeminder.data.Area
-import com.gooldy.georeminder.data.Reminder
+import com.gooldy.georeminder.dao.entites.Area
+import com.gooldy.georeminder.dao.entites.Reminder
 import com.gooldy.georeminder.data.ReminderItemAdapter
 import com.gooldy.georeminder.fragments.CardContent
 import com.gooldy.georeminder.service.MainService
@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     private lateinit var cardContentFragment: CardContent
 
     // DB service
-    private val dbService: MainService = MainService(this)
+    private lateinit var dbService: MainService
 
     // RecyclerView
     private val reminders: MutableSet<Reminder> = mutableSetOf()
@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbService = MainService(this)
         setContentView(R.layout.activity_main)
         reminders.addAll(dbService.getAllReminders())
 
@@ -141,7 +142,7 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
 
         if (!isUpdate) {
-            dbService.saveReminder(reminder)
+            dbService.saveReminderWithAreas(reminder, reminder.areas)
             reminders.add(reminder)
             val itemAdapter = ReminderItemAdapter(reminders, { reminderTransfer ->
                 cardContentFragment = CardContent.newInstance(reminderTransfer)
@@ -384,14 +385,15 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     }
 
     companion object {
+        private const val KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested"
+
         const val TAG = "MainActivity"
         const val MAP_CIRCLE_REQUEST = 1001
         const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
         const val UPDATE_INTERVAL = 10 * 1000
         const val FASTEST_UPDATE_INTERVAL = UPDATE_INTERVAL / 2
-        const val MAX_WAIT_TIME = UPDATE_INTERVAL * 3
 
-        const val KEY_LOCATION_UPDATES_REQUESTED = "location-updates-requested"
+        const val MAX_WAIT_TIME = UPDATE_INTERVAL * 3
 
         fun setRequesting(context: Context, value: Boolean) {
             PreferenceManager.getDefaultSharedPreferences(context)

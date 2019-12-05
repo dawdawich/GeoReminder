@@ -13,6 +13,7 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.gooldy.georeminder.R
+import com.gooldy.georeminder.dao.entites.Area
 
 // TODO implement fun for edit and remove
 class AreaItemAdapter(private val areas: MutableList<Area>, private val editFun: (Area) -> Unit,
