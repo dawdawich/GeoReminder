@@ -5,6 +5,9 @@ import androidx.room.Transaction
 import com.gooldy.georeminder.dao.AppDatabase
 import com.gooldy.georeminder.dao.entites.Area
 import com.gooldy.georeminder.dao.entites.Reminder
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import java.util.*
 
 class MainService(context: Context) {
@@ -13,6 +16,14 @@ class MainService(context: Context) {
 
     private val reminderDao = db.reminderDao()
     private val areaDao = db.areaDao()
+
+    companion object {
+        fun <T> observeOn(observer: () -> Observable<T>) {
+            observer().subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe()
+        }
+    }
 
     @Transaction
     fun saveReminderWithAreas(reminder: Reminder, areas: Set<Area>) {

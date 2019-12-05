@@ -19,8 +19,8 @@ import com.gooldy.georeminder.R
 import com.gooldy.georeminder.activities.MainActivity
 import com.gooldy.georeminder.constants.ARG_PARAM_REMINDER
 import com.gooldy.georeminder.dao.entites.Area
-import com.gooldy.georeminder.data.AreaItemAdapter
 import com.gooldy.georeminder.dao.entites.Reminder
+import com.gooldy.georeminder.data.AreaItemAdapter
 import kotlinx.android.synthetic.main.fragment_card_content.*
 import java.time.Instant
 import java.util.*
@@ -76,6 +76,9 @@ class CardContent : Fragment(), View.OnClickListener {
                     repeatable = rRepeatReminderS.isChecked
                     active = rActiveReminderS.isChecked
                     modifyTime = Instant.now()
+                    areas.forEach { area ->
+                        area.reminderId = this.id
+                    }
                 }, true)
             } ?: run {
                 val reminderObject = Reminder(UUID.randomUUID(),

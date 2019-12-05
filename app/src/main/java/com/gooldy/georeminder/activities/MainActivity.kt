@@ -41,6 +41,8 @@ import com.gooldy.georeminder.dao.entites.Reminder
 import com.gooldy.georeminder.data.ReminderItemAdapter
 import com.gooldy.georeminder.fragments.CardContent
 import com.gooldy.georeminder.service.MainService
+import com.gooldy.georeminder.service.MainService.Companion.observeOn
+import io.reactivex.Observable.fromCallable
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
@@ -68,25 +70,34 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        dbService = MainService(this)
         setContentView(R.layout.activity_main)
-        reminders.addAll(dbService.getAllReminders())
+        dbService = MainService(this)
 
-        itemAdapter = ReminderItemAdapter(reminders, { reminder ->
-            cardContentFragment = CardContent.newInstance(reminder)
-            instantiateFragment()
-        }) { reminder ->
-            dbService.removeReminder(reminder)
-            reminders.remove(reminder)
-            itemAdapter.notifyDataSetChanged()
+        observeOn {
+            fromCallable { dbService.getAllReminders() }
+                .doOnNext { reminders.addAll(it) }
+                .doOnComplete {
+                    itemAdapter = ReminderItemAdapter(reminders, { reminder ->
+                        cardContentFragment = CardContent.newInstance(reminder)
+                        instantiateFragment()
+                    }) { reminder ->
+                        observeOn {
+                            fromCallable { dbService.removeReminder(reminder) }
+                                .doOnNext {
+                                    reminders.remove(reminder)
+                                    itemAdapter.notifyDataSetChanged()
+                                }
+                        }
+                    }
+                    reminderContainer.adapter = itemAdapter
+                    reminderContainer.layoutManager = LinearLayoutManager(this)
+                }
         }
 
         fab.setOnClickListener {
             cardContentFragment = CardContent.newInstance(null)
             instantiateFragment()
         }
-        reminderContainer.adapter = itemAdapter
-        reminderContainer.layoutManager = LinearLayoutManager(this)
 
         if (!checkPermission()) {
             requestPermission()
@@ -140,21 +151,28 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         fab.show()
         isEditContentEnable = false
 
-
         if (!isUpdate) {
-            dbService.saveReminderWithAreas(reminder, reminder.areas)
+            observeOn {
+                fromCallable { dbService.saveReminderWithAreas(reminder, reminder.areas) }
+            }
             reminders.add(reminder)
             val itemAdapter = ReminderItemAdapter(reminders, { reminderTransfer ->
                 cardContentFragment = CardContent.newInstance(reminderTransfer)
                 instantiateFragment()
             }) { reminderTransfer ->
-                dbService.removeReminder(reminderTransfer)
-                reminders.remove(reminderTransfer)
-                itemAdapter.notifyDataSetChanged()
+                observeOn {
+                    fromCallable { dbService.removeReminder(reminderTransfer) }
+                        .doOnComplete {
+                            reminders.remove(reminderTransfer)
+                            itemAdapter.notifyDataSetChanged()
+                        }
+                }
             }
             reminderContainer.adapter = itemAdapter
         } else {
-            dbService.updateReminder(reminder)
+            observeOn {
+                fromCallable { dbService.updateReminder(reminder) }
+            }
             reminders.add(reminder)
             reminderContainer.adapter?.notifyDataSetChanged()
         }

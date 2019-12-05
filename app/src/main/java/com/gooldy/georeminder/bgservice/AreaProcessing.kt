@@ -6,47 +6,49 @@ import com.gooldy.georeminder.constants.ARROR_FOR_AN_ERROR
 import com.gooldy.georeminder.dao.entites.Area
 import com.gooldy.georeminder.dao.entites.Reminder
 import com.gooldy.georeminder.service.MainService
+import io.reactivex.Observable.fromCallable
 import java.time.Instant
 
 class AreaProcessing(context: Context) {
 
     private val dbService: MainService = MainService(context)
-    private val activeReminders: Set<Reminder>
-
-    init {
-        activeReminders = dbService.getAllActiveReminders()
-    }
 
     fun getAccordanceLocation(locations: List<Location>): Set<Reminder> {
         val result = mutableSetOf<Reminder>()
         val repeatReminders = mutableSetOf<Reminder>()
-        locations.forEach { location ->
-            val latitude = location.latitude
-            val longitude = location.longitude
-            val locationTime = Instant.ofEpochMilli(location.time)
-            activeReminders.forEach { reminder ->
-                if (reminder.modifyTime!!.isBefore(locationTime)) {
-                    val areas = dbService.getAreas(reminder.id)
-                    if (areas
-                            .filter { isPosInArea(latitude, longitude, it) }
-                            .any()) {
-                        if (!reminder.notified) {
-                            result += reminder
-                            if (!reminder.repeatable) {
-                                reminder.active = false
+        MainService.observeOn {
+            fromCallable { dbService.getAllActiveReminders() }
+                .doOnNext { reminders ->
+                    locations.forEach { location ->
+                        val latitude = location.latitude
+                        val longitude = location.longitude
+                        val locationTime = Instant.ofEpochMilli(location.time)
+                        reminders.forEach { reminder ->
+                            if (reminder.modifyTime.isBefore(locationTime)) {
+                                val areas = dbService.getAreas(reminder.id)
+                                if (areas
+                                        .filter { isPosInArea(latitude, longitude, it) }
+                                        .any()) {
+                                    if (!reminder.notified) {
+                                        result += reminder
+                                        if (!reminder.repeatable) {
+                                            reminder.active = false
+                                        }
+                                        reminder.notified = true
+                                        reminder.modifyTime = Instant.now()
+                                    }
+                                } else if (reminder.repeatable && reminder.notified && areas
+                                        .none { isPosInArea(latitude, longitude, it, ARROR_FOR_AN_ERROR) }) {
+                                    repeatReminders += reminder
+                                    reminder.notified = false
+                                    reminder.modifyTime = Instant.now()
+                                }
                             }
-                            reminder.notified = true
-                            reminder.modifyTime = Instant.now()
                         }
-                    } else if (reminder.repeatable && reminder.notified && areas
-                            .none { isPosInArea(latitude, longitude, it, ARROR_FOR_AN_ERROR) }) {
-                        repeatReminders += reminder
-                        reminder.notified = false
-                        reminder.modifyTime = Instant.now()
                     }
                 }
-            }
         }
+
         updateReminders(repeatReminders)
         updateReminders(result)
         return result
@@ -60,7 +62,9 @@ class AreaProcessing(context: Context) {
 
     fun updateReminders(reminders: Set<Reminder>) {
         reminders.forEach {
-            dbService.updateReminder(it)
+            MainService.observeOn {
+                fromCallable { dbService.updateReminder(it) }
+            }
         }
     }
 
