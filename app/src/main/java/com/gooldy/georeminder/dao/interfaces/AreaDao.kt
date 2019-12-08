@@ -29,4 +29,7 @@ interface AreaDao {
     @Query("SELECT * FROM areas WHERE reminderId = :id")
     fun getAreasByReminderId(id: UUID) : List<Area>
 
+    @Query("SELECT * FROM areas WHERE reminderId IN (:ids)")
+    fun getAreasByReminderIds(ids: List<UUID>): List<Area>
+
 }

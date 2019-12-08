@@ -52,4 +52,8 @@ class MainService(context: Context) {
     fun getAreas(reminderId: UUID) : Set<Area> {
         return areaDao.getAreasByReminderId(reminderId).toHashSet()
     }
+
+    fun getAreasByReminderIds(reminderIds: List<UUID>): Set<Area> {
+        return areaDao.getAreasByReminderIds(reminderIds).toHashSet()
+    }
 }

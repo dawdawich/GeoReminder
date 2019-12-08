@@ -67,7 +67,6 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     private lateinit var googleApiClient: GoogleApiClient
     private lateinit var locationRequest: LocationRequest
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

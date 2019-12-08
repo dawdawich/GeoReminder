@@ -27,6 +27,7 @@ import androidx.core.app.ActivityCompat
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -77,6 +78,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var isAreaStarted: Boolean = false
     private var activeCircle: Circle? = null
+
+    private var geofencingClient: GeofencingClient? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
