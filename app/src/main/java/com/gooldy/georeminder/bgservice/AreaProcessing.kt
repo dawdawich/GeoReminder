@@ -2,7 +2,7 @@ package com.gooldy.georeminder.bgservice
 
 import android.content.Context
 import android.location.Location
-import com.gooldy.georeminder.constants.ARROR_FOR_AN_ERROR
+import com.gooldy.georeminder.constants.ERROR_FOR_AN_ERROR
 import com.gooldy.georeminder.data.Area
 import com.gooldy.georeminder.data.Reminder
 import com.gooldy.georeminder.service.MainService
@@ -38,7 +38,7 @@ class AreaProcessing(context: Context) {
                             reminder.modifyTime = Instant.now()
                         }
                     } else if (reminder.repeatable && reminder.notified && reminder.reminderAreas
-                            .none { isPosInArea(latitude, longitude, it, ARROR_FOR_AN_ERROR) }) {
+                            .none { isPosInArea(latitude, longitude, it, ERROR_FOR_AN_ERROR) }) {
                         repeatReminders += reminder
                         reminder.notified = false
                         reminder.modifyTime = Instant.now()

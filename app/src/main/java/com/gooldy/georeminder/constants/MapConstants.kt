@@ -17,6 +17,5 @@ const val NOTIFICATION_CHANNEL_ID = "geo_reminder_channel"
 
 const val ARG_PARAM_REMINDER = "reminderKeyArgument"
 
-// FIXME: rename
 // 30 meters
-const val ARROR_FOR_AN_ERROR = 30.0
+const val ERROR_FOR_AN_ERROR = 30.0
