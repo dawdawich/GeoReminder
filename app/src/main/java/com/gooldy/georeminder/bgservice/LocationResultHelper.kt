@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_VIEW
 import android.graphics.Color
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -20,6 +21,7 @@ class LocationResultHelper(val context: Context) {
 
     companion object {
         const val KEY_LOCATION_UPDATE_RESULT = "location_update_result"
+        const val EXTRA_REMINDER_ID_KEY = "extraReminderIdKey"
     }
 
     private var notificationManager: NotificationManager? = null
@@ -39,7 +41,9 @@ class LocationResultHelper(val context: Context) {
 
 
     fun showNotification(reminder: Reminder) {
-        val notificationIntent = Intent(context, MainActivity::class.java)
+        val notificationIntent = Intent(context, MainActivity::class.java).apply {
+            putExtra(EXTRA_REMINDER_ID_KEY, reminder.id)
+        }
         // Construct a task stack.
         val stackBuilder: TaskStackBuilder = TaskStackBuilder.create(context)
 
@@ -61,5 +65,4 @@ class LocationResultHelper(val context: Context) {
 
         notificationManager?.notify(reminder.hashCode(), notificationBuilder.build())
     }
-
 }

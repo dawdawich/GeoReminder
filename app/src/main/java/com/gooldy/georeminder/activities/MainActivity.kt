@@ -43,6 +43,7 @@ import com.gooldy.georeminder.fragments.CardContent
 import com.gooldy.georeminder.service.MainService
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.util.*
 
 
 class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListener, GoogleApiClient.ConnectionCallbacks,
@@ -92,6 +93,17 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         }
         buildGoogleApiClient()
         requestLocationUpdates()
+
+        if (intent.hasExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY)) {
+            val reminderId = intent.getSerializableExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY) as UUID
+            intent.removeExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY)
+            reminders.stream()
+                .filter { it.id == reminderId }
+                .findFirst().orElse(null).let {
+                    cardContentFragment = CardContent.newInstance(it)
+                    instantiateFragment()
+                }
+        }
     }
 
     override fun onStart() {

@@ -71,6 +71,9 @@ class CardContent : Fragment(), View.OnClickListener {
                     reminderAreas = (recyclerView.adapter as AreaItemAdapter).getAreasList().toSet()
                     repeatable = rRepeatReminderS.isChecked
                     isActive = rActiveReminderS.isChecked
+                    if (isActive) {
+                        notified = false
+                    }
                     modifyTime = Instant.now()
                 }, true)
             } ?: run {
