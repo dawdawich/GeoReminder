@@ -128,4 +128,15 @@ class MainService(context: Context) {
             daoR.deleteReminder(reminder.id)
         }
     }
+
+    fun removeReminder(reminderId: UUID) {
+        dbFactory.inTransaction { daoA, daoR, daoB ->
+            val reminder = daoR.getReminder(reminderId)
+            daoB.deleteRelations(reminderId)
+            reminder?.reminderAreas?.forEach {
+                daoA.deleteArea(it.id)
+            }
+            reminder?.id?.let { daoR.deleteReminder(it) }
+        }
+    }
 }

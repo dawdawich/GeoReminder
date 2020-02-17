@@ -19,3 +19,8 @@ const val ARG_PARAM_REMINDER = "reminderKeyArgument"
 
 // 30 meters
 const val ERROR_FOR_AN_ERROR = 30.0
+
+// actions
+const val ACTION_DELETE = "com.gooldy.georeminder.action_delete"
+
+const val EXTRA_REMINDER_ID_KEY = "extraReminderIdKey"

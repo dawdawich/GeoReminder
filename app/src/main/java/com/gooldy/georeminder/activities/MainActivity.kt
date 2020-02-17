@@ -33,6 +33,7 @@ import com.gooldy.georeminder.R
 import com.gooldy.georeminder.bgservice.LocationResultHelper
 import com.gooldy.georeminder.bgservice.LocationUpdatesBroadcastReceiver
 import com.gooldy.georeminder.constants.ERROR_DIALOG_REQUEST
+import com.gooldy.georeminder.constants.EXTRA_REMINDER_ID_KEY
 import com.gooldy.georeminder.constants.PARAM_AREA
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION
 import com.gooldy.georeminder.constants.PERMISSIONS_REQUEST_ENABLE_GPS
@@ -66,7 +67,6 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
     private lateinit var googleApiClient: GoogleApiClient
     private lateinit var locationRequest: LocationRequest
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -94,9 +94,9 @@ class MainActivity : AppCompatActivity(), CardContent.OnFragmentInteractionListe
         buildGoogleApiClient()
         requestLocationUpdates()
 
-        if (intent.hasExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY)) {
-            val reminderId = intent.getSerializableExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY) as UUID
-            intent.removeExtra(LocationResultHelper.EXTRA_REMINDER_ID_KEY)
+        if (intent.hasExtra(EXTRA_REMINDER_ID_KEY)) {
+            val reminderId = intent.getSerializableExtra(EXTRA_REMINDER_ID_KEY) as UUID
+            intent.removeExtra(EXTRA_REMINDER_ID_KEY)
             reminders.stream()
                 .filter { it.id == reminderId }
                 .findFirst().orElse(null).let {

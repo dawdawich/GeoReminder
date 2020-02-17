@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
@@ -24,6 +25,7 @@
                 android:exported="true">
             <intent-filter>
                 <action android:name="com.gooldy.georeminder.bgservice.LocationUpdatesBroadcastReceiver.ACTION_PROCESS_UPDATES"></action>
+                <action android:name="com.gooldy.georeminder.constants.ACTION_DELETE"></action>
             </intent-filter>
         </receiver>
 
